@@ -5,7 +5,7 @@
 class Delayer
 {
 public:
-    virtual void delay() = 0;
+    virtual int delay() = 0;
     virtual ~Delayer() {}
 };
 

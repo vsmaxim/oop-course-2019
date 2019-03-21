@@ -3,9 +3,8 @@
 
 #include <sstream>
 #include <string>
+#include <regex>
 
-using std::string;
-using std::stringstream;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -23,12 +22,17 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_connectServerButton_clicked()
 {
-    QStringList serverAddress = ui->serverAddressEdit->text().split(":");
-    if (serverAddress.size() != 2)
+    static std::regex ipPattern("([\\d]{1,3}\\.){3}[\\d]{1,3}:[\\d]{1,5}");
+
+    if (std::regex_match(ui->serverAddressEdit->text().toStdString(), ipPattern))
     {
-        return;
+        QStringList serverAddress = ui->serverAddressEdit->text().split(":");
+        client.setTargetHost(serverAddress[0].toStdString(), serverAddress[1].toInt());
+
+        ui->setCustomerMeanButton->setEnabled(true);
+        ui->setFirstCashierButton->setEnabled(true);
+        ui->setSecondCashierButton->setEnabled(true);
     }
-    client.setTargetHost(serverAddress[0].toStdString(), serverAddress[1].toInt());
 }
 
 void MainWindow::on_setCustomerMeanButton_clicked()
@@ -40,44 +44,55 @@ void MainWindow::on_setCustomerMeanButton_clicked()
 void MainWindow::on_setFirstCashierButton_clicked()
 {
     double newMean = ui->firstCashierMeanTimeSpin->value();
-    client.changeCashierRequest(1, newMean);
+    client.changeCashierRequest(0, newMean);
 }
 
 void MainWindow::on_setSecondCashierButton_clicked()
 {
     double newMean = ui->secondCashierMeanTimeSpin->value();
-    client.changeCashierRequest(2, newMean);
+    client.changeCashierRequest(1, newMean);
 }
 
 void MainWindow::on_startModelingButton_clicked()
 {
     client.startModelingRequest();
+    ui->startModelingButton->setEnabled(false);
+    ui->stopModelingButton->setEnabled(true);
 }
 
 void MainWindow::on_stopModelingButton_clicked()
 {
     client.stopModelingRequest();
+    ui->startModelingButton->setEnabled(true);
+    ui->stopModelingButton->setEnabled(false);
 }
 
 void MainWindow::on_statsUpdateButton_clicked()
 {
-    for (size_t i = 1; i <= 2; ++i)
+    for (size_t i = 0; i <= 1; ++i)
     {
         string stats = client.getStatistics(static_cast<int>(i));
-        stringstream response(stats);
+        std::stringstream response(stats);
+
         double mean, std;
         string prefix;
         int cashierId;
 
         response >> prefix >> cashierId >> mean >> std;
 
-        if (i == 1)
-        {
+        // Temporary hack
+        mean /= 1000;
+        std /= 1000;
 
+        if (i == 0)
+        {
+            ui->firstMeanValue->setText(QString::fromStdString(std::to_string(mean)));
+            ui->firstSTDValue->setText(QString::fromStdString(std::to_string(std)));
         }
-        else if ( i == 2)
+        else if (i == 1)
         {
-
+            ui->secondMeanValue->setText(QString::fromStdString(std::to_string(mean)));
+            ui->secondSTDValue->setText(QString::fromStdString(std::to_string(std)));
         }
     }
 }

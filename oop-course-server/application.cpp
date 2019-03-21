@@ -6,20 +6,61 @@
 
 #include "model.h"
 
-using std::string;
-using std::stringstream;
-
 
 Application::Application(int &argc, char **argv) : QCoreApplication (argc, argv)
 {
     auto socket = std::make_shared<QUdpSocket>(this);
-    // TODO: Rewrite to non-const values
-    generationModel = std::make_shared<model>(0.5, 0.5, 0.5);
+    generationModel = std::make_shared<Model>(0.5, CASHIER_DEFAULTS);
     socket->bind(QHostAddress("127.0.0.1"), static_cast<quint16>(1488));
 
     server = std::make_shared<Server>(socket);
-    generationModel = std::make_shared<model>(1., 2., 3.);
     connect(server.get(), &Server::hasPendingRequests, this, &Application::processStrings);
+}
+
+
+std::string Application::stopModeling(std::stringstream &in)
+{
+    generationModel->stop();
+    return "stop_modeling: done";
+}
+
+
+std::string Application::startModeling(std::stringstream &in)
+{
+    generationModel->run();
+    return "start_modeling: done";
+}
+
+
+std::string Application::changeCashier(std::stringstream &in)
+{
+    size_t cashierIndex;
+    double newMean;
+    in >> cashierIndex >> newMean;
+    std::cout << "Cashier index to set: " << cashierIndex << std::endl;
+    generationModel->setCashierMean(cashierIndex, newMean);
+    return "change_cashier: done";
+}
+
+
+std::string Application::changeCustomerGenerator(std::stringstream &in)
+{
+    double newMean;
+    in >> newMean;
+    generationModel->setCustomerGeneratorMean(newMean);
+    return "change_customer: done";
+}
+
+
+std::string Application::getStatistics(std::stringstream &in)
+{
+    size_t cashierIndex;
+    std::stringstream s;
+    in >> cashierIndex;
+    s << "get_statistics: " << cashierIndex << " "
+      << generationModel->getMeanValueForCustomer(cashierIndex) << " "
+      << generationModel->getStdValueForCustomer(cashierIndex);
+    return s.str();
 }
 
 void Application::processStrings(queue<Request> & q)
@@ -28,55 +69,29 @@ void Application::processStrings(queue<Request> & q)
     {
         Request r = q.front();
         q.pop();
-        std::cout << q.size();
-        // TODO: Rewrite this
-        stringstream requestIn(r.body.toStdString());
+
+        std::stringstream requestIn(r.body.toStdString());
+        std::string response;
         std::string command;
-        string response;
-        stringstream responseOut(response);
 
         std::cout << "Request: " << r.body.toStdString() << std::endl;
         requestIn >> command;
 
-        if (command == "change_cashier:")
-        {
-            int cashierIndex;
-            double newMean;
-            requestIn >> cashierIndex >> newMean;
-            if (cashierIndex == 1)
-            {
-                generationModel->setFirstCustomerMean(newMean);
-            } else if (cashierIndex == 2)
-            {
-                generationModel->setSecondCustomerMean(newMean);
-            }
-            responseOut << "change_cashier: done";
-        } else if (command == "change_generator:")
-        {
-            double newMean;
-            requestIn >> newMean;
-            generationModel->setCustomerGeneratorMean(newMean);
-            responseOut << "change_generator: done";
-
-        } else if (command == "start_modeling:")
-        {
-            std::cout << "Started modeling";
-            generationModel->run();
-            responseOut << "start_modeling: done";
+        if (command == "change_cashier:") {
+            response = changeCashier(requestIn);
+        } else if (command == "change_generator:") {
+            response = changeCustomerGenerator(requestIn);
+        } else if (command == "start_modeling:") {
+            response = startModeling(requestIn);
         } else if (command == "stop_modeling:") {
-            generationModel->stop();
-            responseOut << "stop_modeling: done";
+            response = stopModeling(requestIn);
         } else if (command == "get_statistics:") {
-            int cashierIndex;
-            requestIn >> cashierIndex;
-            responseOut << "get_statistics: " << cashierIndex << " "
-                        << generationModel->getMeanValueForCustomer(cashierIndex) << " "
-                        << generationModel->getStdValueForCustomer(cashierIndex);
+            response = getStatistics(requestIn);
         } else {
-            std::cout << "Command unkown!";
+            response = "Command unknown!";
         }
-        std::cout << "Response: " << responseOut.str() << std::endl;
-        server->sendResponse(r.address, responseOut.str());
+        std::cout << response << std::endl;
+        server->sendResponse(r.address, response);
     }
 }
 

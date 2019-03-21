@@ -2,6 +2,7 @@
 #include <memory>
 #include <vector>
 #include <windows.h>
+#include <cstdarg>
 
 #include "model.h"
 #include "bookingoffice.h"
@@ -9,45 +10,51 @@
 #include "statisticscollector.h"
 
 
-model::model(double generatorMean, double firstCashierMean, double secondCashierMean): firstCashier(firstCashierMean),
-    secondCashier(secondCashierMean),  office(), customerGenerator(generatorMean), collector()
+Model::Model(double generatorMean, std::vector<double> cashiersMean) : customerGenerator(generatorMean), office(), collector(), cashiers()
 {
-    office.openNewWindow(firstCashier);
-    office.openNewWindow(secondCashier);
+    for (auto & mean: cashiersMean)
+    {
+        cashiers.push_back(std::make_shared<Cashier>(mean));
+        office.openNewWindow(*cashiers.back());
+    }
     for (auto &window: office.getWindows())
     {
-        window->subscribe(static_cast<SubscriberInterface *>(&collector));
+        window->subscribe(&collector);
     }
 }
 
-model::~model()
+
+Model::~Model()
 {
     stop();
 }
 
-void model::run()
+
+void Model::run()
 {
     simulate = true;
     for (auto window : office.getWindows())
     {
-        threads.emplace_back(&model::runTicketWindow, this, window);
+        threads.emplace_back(&Model::runTicketWindow, this, window);
     }
-    threads.emplace_back(&model::runCustomerGenerator, this);
-    threads.emplace_back(&model::runStatisticsCollector, this);
+    threads.emplace_back(&Model::runCustomerGenerator, this);
+    threads.emplace_back(&Model::runStatisticsCollector, this);
 }
 
-void model::stop()
+
+void Model::stop()
 {
     simulate = false;
     for (auto &thread: threads)
     {
         thread.join();
-        cout << "Thread joined\n";
+        std::cout << "Thread joined\n";
     }
     threads.clear();
 }
 
-void model::runTicketWindow(TicketWindow *window)
+
+void Model::runTicketWindow(TicketWindow *window)
 {
     while (simulate)
     {
@@ -55,7 +62,8 @@ void model::runTicketWindow(TicketWindow *window)
     }
 }
 
-void model::runCustomerGenerator()
+
+void Model::runCustomerGenerator()
 {
     while (simulate)
     {
@@ -64,22 +72,22 @@ void model::runCustomerGenerator()
     }
 }
 
-void model::setCustomerGeneratorMean(double mean)
+
+void Model::setCustomerGeneratorMean(double mean)
 {
     customerGenerator.setNewMean(mean);
 }
 
-void model::setFirstCustomerMean(double mean)
+void Model::setCashierMean(size_t index, double mean)
 {
-    firstCashier.setNewMean(mean);
+    if (index < cashiers.size())
+    {
+        cashiers[index]->setNewMean(mean);
+    }
 }
 
-void model::setSecondCustomerMean(double mean)
-{
-    secondCashier.setNewMean(mean);
-}
 
-void model::runStatisticsCollector()
+void Model::runStatisticsCollector()
 {
     while (simulate)
     {
@@ -89,29 +97,21 @@ void model::runStatisticsCollector()
 }
 
 
-double model::getMeanValueForCustomer(int cashierIndex)
+double Model::getMeanValueForCustomer(size_t cashierIndex)
 {
-    if (cashierIndex == 1)
+    if (cashierIndex < cashiers.size())
     {
-        return collector.mean(&firstCashier);
-    }
-    else if (cashierIndex == 2)
-    {
-        return collector.mean(&secondCashier);
+        return collector.mean(cashiers[cashierIndex].get());
     }
     return 0;
 }
 
 
-double model::getStdValueForCustomer(int cashierIndex)
+double Model::getStdValueForCustomer(size_t cashierIndex)
 {
-    if (cashierIndex == 1)
+    if (cashierIndex < cashiers.size())
     {
-        return collector.std(&firstCashier);
-    }
-    else if (cashierIndex == 2)
-    {
-        return collector.std(&secondCashier);
+        return collector.std(cashiers[cashierIndex].get());
     }
     return 0;
 }

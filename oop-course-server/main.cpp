@@ -5,6 +5,7 @@
 #include <windows.h>
 
 #include "model.h"
+#include "exponentialdelayer.h"
 #include "application.h"
 
 

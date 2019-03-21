@@ -9,8 +9,6 @@
 #include <queue>
 #include <memory>
 
-using std::queue;
-using std::shared_ptr;
 
 struct SenderAddress
 {
@@ -35,19 +33,19 @@ class Server : public QObject
     Q_OBJECT
 
 private:
-    shared_ptr<QUdpSocket> socket;
-    queue<Request> pendingRequests;
+    std::shared_ptr<QUdpSocket> socket;
+    std::queue<Request> pendingRequests;
 
     void processDatagram(QByteArray data, SenderAddress source);
 
 public:
     explicit Server(QObject *parent = nullptr);
-    Server(shared_ptr<QUdpSocket> socket);
+    Server(std::shared_ptr<QUdpSocket> socket);
 
     void sendResponse(SenderAddress & address, const std::string & response);
 
 signals:
-    void hasPendingRequests(queue<Request> & requestQueue);
+    void hasPendingRequests(std::queue<Request> & requestQueue);
 
 public slots:
     void readPendingStrings();

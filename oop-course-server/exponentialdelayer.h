@@ -13,7 +13,7 @@ public:
     ExponentialDelayer(const ExponentialDelayer & obj);
     ~ExponentialDelayer() override = default;
 
-    void delay() override;
+    int delay() override;
     void setNewMean(double newMean);
 };
 

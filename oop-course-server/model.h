@@ -4,29 +4,27 @@
 #include <thread>
 #include <vector>
 #include <windows.h>
+#include <memory>
 
 #include "bookingoffice.h"
 #include "customergenerator.h"
 #include "statisticscollector.h"
 
-using std::vector;
-using std::thread;
 
-class model
+class Model
 {
 private:
     bool simulate;
-    vector<thread> threads;
+    std::vector<std::thread> threads;
 
-    Cashier firstCashier;
-    Cashier secondCashier;
+    std::vector<std::shared_ptr<Cashier>> cashiers;
     BookingOffice office;
     CustomerGenerator customerGenerator;
     StatisticsCollector collector;
 
 public:
-    model(double generatorMean, double firstCashierMean, double secondCashierMean);
-    ~model();
+    Model(double generatorMean, std::vector<double> cashiersMean);
+    ~Model();
 
     void run();
     void stop();
@@ -36,11 +34,10 @@ public:
     void runCustomerGenerator();
 
     void setCustomerGeneratorMean(double mean);
-    void setFirstCustomerMean(double mean);
-    void setSecondCustomerMean(double mean);
+    void setCashierMean(size_t index, double mean);
 
-    double getMeanValueForCustomer(int cashierIndex);
-    double getStdValueForCustomer(int cashierIndex);
+    double getMeanValueForCustomer(size_t cashierIndex);
+    double getStdValueForCustomer(size_t cashierIndex);
 };
 
 #endif // MODEL_H

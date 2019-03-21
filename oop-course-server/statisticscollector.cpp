@@ -4,29 +4,25 @@
 
 double StatisticsCollector::mean(Cashier *ptr)
 {
-    std::vector<milliseconds> vec = map[ptr];
-    const int64_t sum = std::accumulate(vec.begin(), vec.end(), 0, [](const int64_t & left, const milliseconds & right){
-        return left+ right.count();
-    });
-    std::cout << "Sum: " << sum << std::endl;
+    std::vector<int> vec = map[ptr];
+    int sum = std::accumulate(vec.begin(), vec.end(), 0);
     return static_cast<double>(sum) / vec.size();
 }
 
 double StatisticsCollector::std(Cashier *ptr)
 {
     double meanValue = mean(ptr);
-    std::cout << "Mean value: " << meanValue << std::endl;
-    std::vector<milliseconds> vec = map[ptr];
-    double squaredSum = accumulate(vec.begin(), vec.end(), 0, [meanValue](const double & left, const milliseconds & right) {
-       return left + pow((right.count() - meanValue), 2);
+    std::vector<int> vec = map[ptr];
+    double squaredSum = accumulate(vec.begin(), vec.end(), 0, [meanValue](const double & left, const int & right) {
+       return left + pow((right - meanValue), 2);
     });
-    std::cout << "Squared sum: " << squaredSum << std::endl;
-    return squaredSum / (vec.size() - 1);
+    return sqrt(squaredSum / (vec.size()));
 }
 
 void StatisticsCollector::update(EventsPublisher & object)
 {
     TicketWindow * obj = static_cast<TicketWindow *>(&object);
+    std::cout << "Load cashier " << obj->getCashier() << "for update\n";
     obj->loadServeTimeStats(map[obj->getCashier()]);
 }
 

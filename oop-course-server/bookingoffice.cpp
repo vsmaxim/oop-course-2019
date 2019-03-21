@@ -6,10 +6,11 @@ Cashier::Cashier(double mean) : delayer(mean)
 
 }
 
-void Cashier::sellTicket(Customer &c)
+int Cashier::sellTicket(Customer &c)
 {
-    delayer.delay();
-    cout << "Sold ticket to: " << &c << endl;
+    int delay = delayer.delay();
+    std::cout << "Sold ticket to " << &c << " by cashier " << this << std::endl;
+    return delay;
 }
 
 void Cashier::setNewMean(double mean)
@@ -42,8 +43,7 @@ Customer::Customer(BookingOffice & targetOffice) : targetOffice(targetOffice)
 }
 
 
-TicketWindow::TicketWindow(Cashier & c) : lastCall(high_resolution_clock::now()), serveTime(),
-    customerQueue(), cashier(c)
+TicketWindow::TicketWindow(Cashier & c) : serveTime(), customerQueue(), cashier(c)
 {
 
 }
@@ -63,8 +63,6 @@ Customer * TicketWindow::getNextCustomer()
 
 void TicketWindow::synchronizeStatistics()
 {
-    auto delta = duration_cast<milliseconds>(high_resolution_clock::now() - lastCall);
-    serveTime.push_back(delta);
     notify();
 }
 
@@ -80,9 +78,15 @@ void TicketWindow::getInQueue(Customer &c)
     customerQueue.push(&c);
 }
 
-void TicketWindow::loadServeTimeStats(std::vector<std::chrono::milliseconds> &buffer)
+void TicketWindow::loadServeTimeStats(std::vector<int> &buffer)
 {
     std::move(serveTime.begin(), serveTime.end(), std::back_inserter(buffer));
+    serveTime.clear();
+    std::cout << "ServeTime length: " << serveTime.size() << std::endl;
+    for (auto & it: serveTime)
+    {
+        std::cout << "Element: " << it << std::endl;
+    }
 }
 
 Cashier * TicketWindow::getCashier()
@@ -100,7 +104,9 @@ void TicketWindow::work()
     Customer * c = getNextCustomer();
     if (c)
     {
-        cashier.sellTicket(*c);
+        int serviceTime = cashier.sellTicket(*c);
+        std::cout << "Service time: " << serviceTime << std::endl;
+        serveTime.push_back(serviceTime);
     }
 }
 
@@ -113,5 +119,10 @@ void Customer::chooseWindow() {
                 [](const TicketWindow * left, const TicketWindow * right) {
                     return left->getQueueLength() < right->getQueueLength();
     });
+    if ((*minimalWindow)->getQueueLength() > 3)
+    {
+        std::cout << "Customer discarded" << std::endl;
+        return;
+    }
     (*minimalWindow)->getInQueue(*this);
 }

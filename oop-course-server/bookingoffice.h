@@ -11,14 +11,6 @@
 #include "exponentialdelayer.h"
 
 
-using std::cout;
-using std::endl;
-using std::chrono::high_resolution_clock;
-using std::chrono::duration_cast;
-using std::chrono::milliseconds;
-using std::chrono::duration;
-
-
 class TicketWindow;
 class BookingOffice;
 class Customer;
@@ -28,8 +20,10 @@ class Cashier
     ExponentialDelayer delayer;
 public:
     Cashier(double mean);
+    Cashier(Cashier && other) = default;
+    Cashier& operator=(Cashier && other) = default;
 
-    void sellTicket(Customer & c);
+    int sellTicket(Customer & c);
 
     void setNewMean(double mean);
 };
@@ -47,17 +41,19 @@ public:
 class TicketWindow: public EventsPublisher
 {
 private:
-    high_resolution_clock::time_point lastCall;
-    std::vector<milliseconds> serveTime;
+    std::vector<int> serveTime;
     std::queue<Customer *> customerQueue;
     Cashier & cashier;
 public:
     TicketWindow(Cashier & c);
+
     Customer * getNextCustomer();
     size_t getQueueLength() const;
     void getInQueue(Customer & c);
-    void loadServeTimeStats(std::vector<milliseconds> & buffer);
+
+    void loadServeTimeStats(std::vector<int> & buffer);
     Cashier * getCashier();
+
     void sellTicket();
     void work();
     void synchronizeStatistics();

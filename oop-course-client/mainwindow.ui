@@ -28,6 +28,9 @@
     </property>
    </widget>
    <widget class="QPushButton" name="stopModelingButton">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>140</x>
@@ -100,6 +103,9 @@
     </property>
    </widget>
    <widget class="QPushButton" name="setFirstCashierButton">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>320</x>
@@ -113,6 +119,9 @@
     </property>
    </widget>
    <widget class="QPushButton" name="setSecondCashierButton">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>320</x>
@@ -150,6 +159,9 @@
     </property>
    </widget>
    <widget class="QPushButton" name="setCustomerMeanButton">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>320</x>
@@ -274,7 +286,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>СКО 2 кассира</string>
+     <string>СКО 1 кассира</string>
     </property>
    </widget>
    <widget class="QLabel" name="secondMeanLabel">
@@ -355,22 +367,6 @@
      <string>0.00</string>
     </property>
    </widget>
-  </widget>
-  <widget class="QMenuBar" name="menuBar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>734</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menu">
-    <property name="title">
-     <string>Моделирование касс</string>
-    </property>
-   </widget>
-   <addaction name="menu"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">

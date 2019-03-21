@@ -7,15 +7,11 @@
 #include "events.h"
 #include "bookingoffice.h"
 
-using std::chrono::milliseconds;
-using std::chrono::duration;
-
-
 
 class StatisticsCollector : public SubscriberInterface
 {
 private:
-    std::map<Cashier *, std::vector<milliseconds>> map;
+    std::map<Cashier *, std::vector<int>> map;
 
 public:    
     ~StatisticsCollector() override = default;

@@ -13,7 +13,7 @@ Server::Server(QObject *parent) : QObject(parent)
 
 }
 
-Server::Server(shared_ptr<QUdpSocket> socket) : socket(socket)
+Server::Server(std::shared_ptr<QUdpSocket> socket) : socket(socket)
 {
     connect(socket.get(), SIGNAL(readyRead()), this, SLOT(readPendingStrings()));
 }
@@ -30,7 +30,7 @@ void Server::readPendingStrings()
     while (socket->hasPendingDatagrams())
     {
         QByteArray datagram;
-        datagram.resize(socket->pendingDatagramSize());
+        datagram.resize(static_cast<int>(socket->pendingDatagramSize()));
         SenderAddress address;
         socket->readDatagram(datagram.data(), datagram.size(), &address.address, &address.port);
         processDatagram(datagram, address);

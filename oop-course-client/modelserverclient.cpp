@@ -8,7 +8,7 @@ using std::stringstream;
 
 
 ModelServerClient::ModelServerClient(std::string host, int port, std::string targetHost, int targetPort) : Client (host, port),
-    targetHost(host), targetPort(port)
+    targetHost(targetHost), targetPort(targetPort)
 {
 
 }
@@ -42,7 +42,6 @@ string ModelServerClient::changeCashierRequest(int cashierId, double newMean)
 {
     stringstream r;
     r << "change_cashier: " << cashierId << " " << newMean;
-    qDebug() << QString(r.str().c_str());
     return sendRequest(r.str());
 }
 
@@ -51,7 +50,6 @@ string ModelServerClient::changeGeneratorRequest(double newMean)
 {
     stringstream r;
     r << "change_generator: " << newMean;
-    qDebug() << QString(r.str().c_str());
     return sendRequest(r.str());
 }
 
