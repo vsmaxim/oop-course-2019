@@ -11,7 +11,7 @@ Application::Application(int &argc, char **argv) : QCoreApplication (argc, argv)
 {
     auto socket = std::make_shared<QUdpSocket>(this);
     generationModel = std::make_shared<Model>(0.5, CASHIER_DEFAULTS);
-    socket->bind(QHostAddress("127.0.0.1"), static_cast<quint16>(1488));
+    socket->bind(QHostAddress("127.0.0.1"), static_cast<quint16>(1500));
 
     server = std::make_shared<Server>(socket);
     connect(server.get(), &Server::hasPendingRequests, this, &Application::processStrings);

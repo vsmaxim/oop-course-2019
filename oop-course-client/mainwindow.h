@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <thread>
+#include <memory>
 
 #include "modelserverclient.h"
 
@@ -13,6 +15,10 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
+private:
+    bool runModeling;
+    std::shared_ptr<std::thread> statisticsUpdateThread;
+    void updateStatistics();
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
